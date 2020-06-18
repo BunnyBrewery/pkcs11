@@ -71,17 +71,24 @@ func uintToBytes(x uint64) []byte {
 }
 
 // Error represents an PKCS#11 error.
-type Error uint
-
-func (e Error) Error() string {
-	return fmt.Sprintf("pkcs11: 0x%X: %s", uint(e), strerror[uint(e)])
+type Error struct {
+	Code uint
+	Name string
 }
 
-func toError(e C.CK_RV) error {
+func (e Error) Error() string {
+	return fmt.Sprintf("pkcs11: 0x%X: %s", e.Code, e.Name)
+}
+
+func toError(e C.CK_RV) Error {
 	if e == C.CKR_OK {
 		return nil
 	}
-	return Error(e)
+	err := Error{
+		Code: uint(e),
+		Name: strerror[uint(e)],
+	}
+	return err
 }
 
 // SessionHandle is a Cryptoki-assigned value that identifies a session.
